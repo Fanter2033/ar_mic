@@ -13,17 +13,20 @@
 
 #controls button {
   flex: 1;
-  padding: 14px;
-  font-size: 18px;
+  padding: 12px 14px;
+  font-size: 16px;
   border: none;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #000;
-  font-weight: bold;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0ea5e9 0%, #0171bb 100%);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(1, 35, 63, 0.25);
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
 }
 
 #controls button:active {
-  background: #d0d0d0;
+  transform: translateY(1px) scale(0.995);
+  box-shadow: 0 4px 12px rgba(1, 35, 63, 0.18);
 }
 
 #clean-fullscreen-btn {
@@ -34,10 +37,10 @@
   height: 52px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  color: white;
-  font-size: 26px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25));
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -62,10 +65,10 @@
   height: 52px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  color: white;
-  font-size: 20px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.25));
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,12 +86,12 @@
 }
 
 .dialog {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  padding: 20px 18px;
+  border-radius: 12px;
   width: 90%;
-  max-width: 360px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 420px;
+  box-shadow: 0 8px 30px rgba(2, 24, 47, 0.18);
   margin-left: 10px;
   margin-right: 10px;
 }
@@ -97,11 +100,26 @@
   margin-top: 0;
 }
 
-#controls button {
-  color: whitesmoke;
-  padding: 10px 16px;
-  border: 1px solid #bbb;
-  background: #0171bb;
-  border-radius: 6px;
-  cursor: pointer;
+/* small responsive tweaks */
+#controls button:hover {
+  transform: translateY(-3px);
+  opacity: 0.98;
 }
+
+/* Font, spacing and typography */
+@font-face {
+  font-family: 'Tex Regular';
+  src: url('fonts/Tex-Regular.woff2') format('woff2'),
+       url('fonts/Tex-Regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+body, button, .dialog, #controls {
+  font-family: 'Tex Regular', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+/* Make dialog text a bit friendlier */
+.dialog p, .dialog ul { color: #08314b; line-height: 1.45; }
+

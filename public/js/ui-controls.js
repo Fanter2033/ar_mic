@@ -7,35 +7,28 @@
       const closeBtn = document.getElementById("close");
       const backdrop = document.getElementById("backdrop");
       const fullscreenBtn = document.getElementById("clean-fullscreen-btn");
-      let language = "ITA";
+      let language = "ITA"; // the current one, not the one showed on the button
       let isClean = false;
 
       if (changeLanguageBtn) {
         changeLanguageBtn.addEventListener("click", () => {
-            changeLanguageBtn.innerHTML = language;
-            language = language == "ENG" ? "ITA" : "ENG"
+          changeLanguageBtn.innerText = language;
+          language = language === "ITA" ? "ENG" : "ITA";
+          window.dispatchEvent(
+            new CustomEvent("languageChanged", { detail: { language } })
+          );
         });
       }
 
-      function getCurrentAudio(){
-        return language;
-      }
-       
-
       function enterFullscreen(element = document.documentElement) {
-        if (element.requestFullscreen) {
-          element.requestFullscreen();
-        } else if (element.webkitRequestFullscreen) {
+        if (element.requestFullscreen) element.requestFullscreen();
+        else if (element.webkitRequestFullscreen)
           element.webkitRequestFullscreen();
-        }
       }
 
       function exitFullscreen() {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       }
 
       if (fullscreenBtn) {
@@ -66,7 +59,6 @@
         openBtn.onclick = () => (backdrop.style.display = "flex");
       if (closeBtn && backdrop)
         closeBtn.onclick = () => (backdrop.style.display = "none");
-
       if (backdrop)
         backdrop.onclick = (e) => {
           if (e.target === backdrop) backdrop.style.display = "none";
