@@ -106,20 +106,6 @@
   opacity: 0.98;
 }
 
-/* Font, spacing and typography */
-@font-face {
-  font-family: 'Tex Regular';
-  src: url('fonts/Tex-Regular.woff2') format('woff2'),
-       url('fonts/Tex-Regular.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-body, button, .dialog, #controls {
-  font-family: 'Tex Regular', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-}
-
 /* Make dialog text a bit friendlier */
 .dialog p, .dialog ul { color: #08314b; line-height: 1.45; }
 

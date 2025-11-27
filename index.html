@@ -25,27 +25,21 @@
       <!-- DRAGO -->
       <a-assets id="drago_container">
         <video
-          id="drago-video"
-          src="https://pub-6ee7ae62a30e4044ad5cca409e4ad858.r2.dev/drago.webm"
-          autoplay
+          id="drago-video-ita"
+          src="/drago/drago_ITA.webm"
           loop
           playsinline
-          muted
+          preload="metadata"
           crossorigin="anonymous"
         ></video>
-        <audio
-          id="drago_audio_ita"
-          class="audio_ita"
-          src="./drago/drago_ITA.mp3"
+        <video
+          id="drago-video-eng"
+          src="/drago/drago_ENG.webm"
+          loop
+          playsinline
+          preload="metadata"
           crossorigin="anonymous"
-        ></audio>
-        <audio
-          id="drago_audio_eng"
-          class="audio_eng"
-          src="./drago/drago_ENG.mp3"
-          crossorigin="anonymous"
-          preload="none"
-        ></audio>
+        ></video>
       </a-assets>
       <a-marker
         type="pattern"
@@ -54,7 +48,7 @@
         smoothTolerance="0.0001"
       >
         <a-plane
-          src="#drago-video"
+          src="#drago-video-ita"
           width="10"
           height="10"
           position="0 0.01 0"
@@ -66,28 +60,21 @@
       <!-- BODHISATTVA -->
       <a-assets id="bod_container">
         <video
-          id="bod-video"
-          src="./bod/bod.webm"
-          autoplay
+          id="bod-video-ita"
+          src="./bod/bod_ITA.webm"
+          loop
+          playsinline
+          preload="noe"
+          crossorigin="anonymous"
+        ></video>
+        <video
+          id="bod-video-eng"
+          src="./bod/bod_ENG.webm"
           loop
           playsinline
           preload="none"
-          muted
           crossorigin="anonymous"
         ></video>
-        <audio
-          id="bod_audio_ita"
-          class="audio_ita"
-          src="./bod/bod_ITA.mp3"
-          crossorigin="anonymous"
-        ></audio>
-        <audio
-          id="bod_audio_eng"
-          class="audio_eng"
-          src="./bod/bod_ENG.mp3"
-          crossorigin="anonymous"
-          preload="none"
-        ></audio>
       </a-assets>
       <a-marker
         type="pattern"
@@ -96,7 +83,7 @@
         smoothTolerance="0.0001"
       >
         <a-plane
-          src="#bod-video"
+          src="#bod-video-ita"
           width="10"
           height="10"
           position="0 0.01 0"
@@ -108,26 +95,21 @@
       <!-- LU -->
       <a-assets id="Lu">
         <video
-          id="lu-video"
-          src="./lu/lu.webm"
-          autoplay
+          id="lu-video-ita"
+          src="./lu/lu_ITA.webm"
           loop
           playsinline
           preload="none"
           crossorigin="anonymous"
         ></video>
-        <audio
-          id="lu_audio_ita"
-          class="audio_ita"
-          src="./lu/lu_ITA.mp3"
+        <video
+          id="lu-video-eng"
+          src="./lu/lu_ENG.webm"
+          loop
+          playsinline
+          preload="none"
           crossorigin="anonymous"
-        ></audio>
-        <audio
-          id="lu_audio_eng"
-          class="audio_eng"
-          src="./lu/lu_ENG.mp3"
-          crossorigin="anonymous"
-        ></audio>
+        ></video>
       </a-assets>
       <a-marker
         type="pattern"
@@ -136,7 +118,7 @@
         smoothTolerance="0.0001"
       >
         <a-plane
-          src="#lu-video"
+          src="#lu-video-ita"
           width="10"
           height="10"
           position="0 0.01 0"
@@ -148,28 +130,21 @@
       <!-- TIGRE -->
       <a-assets id="Tigre">
         <video
-          id="tigre-video"
-          src="./tiger/tigre.webm"
-          autoplay
+          id="tigre-video-ita"
+          src="./tiger/tigre_ITA.webm"
           loop
           playsinline
           preload="none"
           crossorigin="anonymous"
         ></video>
-        <audio
-          id="tigre_audio_ita"
-          class="audio_ita"
-          src="./tiger/tigre_ITA.mp3"
-          crossorigin="anonymous"
+        <video
+          id="tigre-video-eng"
+          src="./tiger/tigre_ENG.webm"
+          loop
+          playsinline
           preload="none"
-        ></audio>
-        <audio
-          id="tigre_audio_eng"
-          class="audio_eng"
-          src="./tiger/tigre_ENG.mp3"
           crossorigin="anonymous"
-          preload="none"
-        ></audio>
+        ></video>
       </a-assets>
       <a-marker
         type="pattern"
@@ -178,7 +153,7 @@
         smoothTolerance="0.0001"
       >
         <a-plane
-          src="#tigre-video"
+          src="#tigre-video-ita"
           width="10"
           height="10"
           position="0 0.01 0"
@@ -190,28 +165,21 @@
       <!-- ZHO -->
       <a-assets id="zho">
         <video
-          id="zho-video"
-          src="./zho/zho.webm"
-          autoplay
+          id="zho-video-ita"
+          src="./zho/zho_ITA.webm"
           loop
           playsinline
           preload="none"
           crossorigin="anonymous"
         ></video>
-        <audio
-          id="zho_audio_ita"
-          class="audio_ita"
-          src="./zho/zho_ITA.mp3"
+        <video
+          id="zho-video-eng"
+          src="./zho/zho_ENG.webm"
+          loop
+          playsinline
           preload="none"
           crossorigin="anonymous"
-        ></audio>
-        <audio
-          id="zho_audio_eng"
-          class="audio_eng"
-          src="./zho/zho_ENG.mp3"
-          preload="none"
-          crossorigin="anonymous"
-        ></audio>
+        ></video>
       </a-assets>
       <a-marker
         type="pattern"
@@ -220,7 +188,7 @@
         smoothTolerance="0.0001"
       >
         <a-plane
-          src="#zho-video"
+          src="#zho-video-ita"
           width="10"
           height="10"
           position="0 0.01 0"
@@ -235,14 +203,16 @@
     <div id="controls">
       <button id="open_tutorial" class="wrapper">Tutorial</button>
 
-      <button id="settings">Settings</button>
+      <button id="settings">sottotitoli</button>
       <div class="backdrop" id="backdrop">
         <div class="dialog">
           <h2>Tutorial</h2>
           <ul>
-            <li>istruzioni</li>
-            <li>istruzioni</li>
-            <li>istruzioni</li>
+            <li>Alzare il volume del telefono e acconsentire all'accesso della webcam</li>
+            <li>Inquadrare gli ideogrammi presenti nelle vetrine e rimanere fermi</li>
+            <li>Puoi cambiare la lingua tramite il pulsante in alto a destra e aggiungere i sottotitoli con il pulsante 
+              blu in basso a sinistra
+            </li>
           </ul>
           <button id="close" style="margin-top: 14px">Close</button>
         </div>
