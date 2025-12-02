@@ -1,6 +1,3 @@
-// start server for local testing --> node index.js
-// forward the localocalhost to a certified domain --> ngrok http  https://localhost:3000  
-
 const express = require('express')
 var https = require('https')
 const fs = require('fs')

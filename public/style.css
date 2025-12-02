@@ -22,6 +22,7 @@
   font-weight: 600;
   box-shadow: 0 6px 18px rgba(1, 35, 63, 0.25);
   transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+
 }
 
 #controls button:active {
@@ -94,6 +95,7 @@
   box-shadow: 0 8px 30px rgba(2, 24, 47, 0.18);
   margin-left: 10px;
   margin-right: 10px;
+  font-size: larger;
 }
 
 .dialog h2 {
@@ -106,5 +108,50 @@
   opacity: 0.98;
 }
 
-/* Make dialog text a bit friendlier */
 .dialog p, .dialog ul { color: #08314b; line-height: 1.45; }
+
+.dialog li {
+  margin: 5px;
+}
+
+.subtitle-container {
+  position: fixed;
+  bottom: 10%; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 600px;
+  text-align: center;
+  color: white;
+  text-shadow: 0px 0px 4px black;
+  font-family: sans-serif;
+  font-size: 18px;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background for readability */
+  padding: 10px;
+  border-radius: 8px;
+  pointer-events: none; /* Let clicks pass through to the AR scene */
+  z-index: 999;
+  min-height: 24px;
+  display: none; /* Hidden by default until toggled */
+}
+
+.subtitle-container.visible {
+  display: block;
+}
+
+
+/* put in public/style.css (or the CSS file you load) */
+#controls button svg {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  fill: currentColor; /* icon color matches text color */
+}
+
+/* ensure path doesn't override size */
+#controls button svg path { vector-effect: non-scaling-stroke; }
+
+/* ensure buttons center their content */
+#controls button { justify-content: center; gap: 8px; }
