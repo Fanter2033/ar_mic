@@ -5,7 +5,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (window.UIControls) 
     window.UIControls.init();
-
-  if (window.SubtitleController) 
-    window.SubtitleController.init();
 });

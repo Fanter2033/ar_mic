@@ -95,6 +95,7 @@
   box-shadow: 0 8px 30px rgba(2, 24, 47, 0.18);
   margin-left: 10px;
   margin-right: 10px;
+  font-size: larger;
 }
 
 .dialog h2 {
@@ -107,9 +108,11 @@
   opacity: 0.98;
 }
 
-/* Make dialog text a bit friendlier */
 .dialog p, .dialog ul { color: #08314b; line-height: 1.45; }
 
+.dialog li {
+  margin: 5px;
+}
 
 .subtitle-container {
   position: fixed;

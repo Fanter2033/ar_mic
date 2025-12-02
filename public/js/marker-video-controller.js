@@ -4,7 +4,6 @@
     init: function () {
       const planes = document.querySelectorAll("a-plane"); // get all the planes
       let currentLanguage = "ITA";
-      let areSubtitlesEnabled = true;
 
       const planesInfos = Array.from(planes)
         .map((plane) => {
@@ -18,8 +17,6 @@
           const videoITA = document.getElementById(idITA);
           const videoENG = document.getElementById(idENG);
           const marker = plane ? plane.closest("a-marker") : null;
-          const trackITA = videoITA.querySelector("track");
-          const trackENG = videoENG.querySelector("track");
 
           return {
             marker,
@@ -29,8 +26,6 @@
             idENG,
             videoITA,
             videoENG,
-            trackITA,
-            trackENG,
           };
         })
         .filter(
@@ -63,7 +58,6 @@
           const newActive = currentLanguage === "ITA" ? videoITA : videoENG;
           if (!newActive) return;
 
-          // Pause only the asset videos we control (do not touch AR.js camera video)
           document
             .querySelectorAll(
               'video[id$="-video-ita"], video[id$="-video-eng"]'
@@ -79,13 +73,6 @@
 
           plane.setAttribute("src", "#" + newActive.id);
           const p = newActive.play();
-          const track = newActive.textTracks;
-          if (areSubtitlesEnabled) {
-            track.mode = "showing";
-            console.log("subtitle showing!");
-          } else {
-            track.mode = "hidden";
-          }
           if (p && typeof p.then === "function") p.catch(() => {});
         });
       });
@@ -116,13 +103,6 @@
 
           if (activeVideo && activeVideo.paused) {
             const p = activeVideo.play();
-            const track = activeVideo.textTracks;
-            if (areSubtitlesEnabled) {
-              track.mode = "showing";
-              console.log("subtitle showing!");
-            } else {
-              track.mode = "hidden";
-            }
             if (p && typeof p.then === "function") p.catch(() => {});
           }
         });
