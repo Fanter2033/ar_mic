@@ -1,5 +1,4 @@
 *.mov
-*.mp4
 *.srt
 node_modules
 example

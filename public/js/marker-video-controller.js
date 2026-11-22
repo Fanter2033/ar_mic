@@ -48,7 +48,7 @@
       }
 
       // Fetch subtitle database
-      fetch("../media/subtitles/subtitles_db.json")
+      fetch("https://cdn.jsdelivr.net/gh/Fanter2033/ar_mic@main/public/media/subtitles/subtitles_db.json")
         .then((response) => {
           if (!response.ok) {
             throw new Error(

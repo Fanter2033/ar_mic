@@ -2,6 +2,25 @@ document.addEventListener("DOMContentLoaded", function () {
   const isIOS =
     /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
+  // this changes are meant to be in incex.html in future versions
+  // Set preload: "auto" for ITA videos, "metadata" for ENG videos
+
+  // Fix zho video sources
+  const zhoIta = document.getElementById("zho-video-ita");
+  if (zhoIta) zhoIta.setAttribute("src", "https://cdn.jsdelivr.net/gh/Fanter2033/ar_mic@main/public/media/zho/zho_ITA.webm");
+  const zhoEng = document.getElementById("zho-video-eng");
+  if (zhoEng) zhoEng.setAttribute("src", "https://cdn.jsdelivr.net/gh/Fanter2033/ar_mic@main/public/media/zho/zho_ENG.webm");
+
+  document.querySelectorAll('video[id$="-video-ita"]').forEach((v) => {
+    v.setAttribute("preload", "auto");
+  });
+  document.querySelectorAll('video[id$="-video-eng"]').forEach((v) => {
+    v.setAttribute("preload", "metadata");
+  });
+  // Fix loading overlay text to use proper ellipsis
+  const loadingP = document.querySelector("#loading-overlay p");
+  if (loadingP) loadingP.textContent = "Caricamento...";
+
   // IOS stuff (mp4 + chroma)
   if (isIOS) {
     // Add muted attribute to all videos on iOS
