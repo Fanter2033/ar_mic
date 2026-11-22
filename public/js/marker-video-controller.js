@@ -1,41 +1,41 @@
 (function (window) {
+  // How long a marker may disappear before its video is paused. AR tracking
+  // flickers a lot (hand shake, reflections on the showcase glass); pausing
+  // instantly makes the video stutter and restart its audio constantly.
+  const MARKER_LOST_GRACE_MS = 700;
+
+  function emit(name, detail) {
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+
   window.MarkerVideoController = {
     init: function () {
       const planes = document.querySelectorAll("a-plane");
       const overlay = document.getElementById("subtitle-overlay");
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
       let currentLanguage = "ITA";
       let subtitlesDatabase = {};
       let areSubtitlesEnabled = false;
+      let audioEnabled = !(
+        /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+      );
 
       const planesInfos = Array.from(planes)
         .map((plane) => {
-          const planeSrc =
-            plane && plane.getAttribute("src") ? plane.getAttribute("src") : "";
+          const planeSrc = plane.getAttribute("src") || "";
           const base = planeSrc
             .replace(/^#/, "")
             .replace(/-video-(?:ita|eng)$/, "");
-          const idITA = base + "-video-ita";
-          const idENG = base + "-video-eng";
-          const videoITA = document.getElementById(idITA);
-          const videoENG = document.getElementById(idENG);
-          const marker = plane ? plane.closest("a-marker") : null;
-
           return {
-            marker,
+            marker: plane.closest("a-marker"),
             plane,
             base,
-            idITA,
-            idENG,
-            videoITA,
-            videoENG,
+            videoITA: document.getElementById(base + "-video-ita"),
+            videoENG: document.getElementById(base + "-video-eng"),
+            visible: false,
+            lostTimer: null,
           };
         })
-        .filter(
-          (info) =>
-            info.marker && info.plane && (info.videoITA || info.videoENG),
-        );
+        .filter((info) => info.marker && (info.videoITA || info.videoENG));
 
       const allContentVideos = Array.from(
         document.querySelectorAll(
@@ -43,22 +43,111 @@
         ),
       );
 
-      function pauseAllVideos() {
-        allContentVideos.forEach((v) => v.pause());
+      // The marker whose video is currently shown
+      let activeInfo = null;
+
+      function videoFor(info) {
+        return currentLanguage === "ITA"
+          ? info.videoITA || info.videoENG
+          : info.videoENG || info.videoITA;
+      }
+
+      function pauseAllVideos(except) {
+        allContentVideos.forEach((v) => {
+          if (v !== except && !v.paused) v.pause();
+        });
+      }
+
+      function setPlaneSrc(info, video) {
+        const src = "#" + video.id;
+        // Avoid re-creating the video texture when nothing changed
+        if (info.plane.getAttribute("src") !== src)
+          info.plane.setAttribute("src", src);
+      }
+
+      // ── Buffering feedback ──
+      function updateBuffering() {
+        const v = activeInfo && videoFor(activeInfo);
+        const buffering =
+          !!v && activeInfo.visible && (v.readyState < 3 || v.seeking);
+        emit("videoBuffering", { buffering });
+      }
+      allContentVideos.forEach((v) => {
+        ["waiting", "playing", "canplay", "seeked", "pause"].forEach((ev) =>
+          v.addEventListener(ev, updateBuffering),
+        );
+        v.addEventListener("playing", () => {
+          emit("videoPlaying", { id: v.id, muted: v.muted });
+        });
+      });
+
+      function play(video) {
+        const p = video.play();
+        if (!p || typeof p.then !== "function") return;
+        p.catch((err) => {
+          if (err && err.name === "NotAllowedError" && !video.muted) {
+            // Autoplay with sound refused (no user gesture yet): play muted
+            // instead of showing nothing, and let the UI offer "unmute".
+            audioEnabled = false;
+            allContentVideos.forEach((v) => (v.muted = true));
+            emit("audioBlocked");
+            if (activeInfo && videoFor(activeInfo) === video && activeInfo.visible)
+              video.play().catch((e) => console.warn("Video play failed:", e));
+          } else if (!err || err.name !== "AbortError") {
+            console.warn("Video play failed:", err);
+          }
+        });
+      }
+
+      function show(info, syncFrom) {
+        const video = videoFor(info);
+        if (!video) return;
+        activeInfo = info;
+        pauseAllVideos(video);
+
+        if (syncFrom && syncFrom !== video) {
+          const target = syncFrom.currentTime;
+          const seek = () => {
+            try {
+              video.currentTime = Math.min(
+                isFinite(video.duration) ? video.duration : Infinity,
+                target,
+              );
+            } catch (err) {
+              console.warn("Could not sync video time:", err);
+            }
+          };
+          // Seeking before metadata is known is ignored by some browsers
+          if (video.readyState >= 1) seek();
+          else video.addEventListener("loadedmetadata", seek, { once: true });
+        }
+
+        setPlaneSrc(info, video);
+        video.muted = !audioEnabled;
+        // play() starts the download by itself. Calling load() here (as
+        // before) restarted any download in progress every time the marker
+        // flickered, so slow connections could never finish buffering.
+        if (video.paused) play(video);
+        updateBuffering();
+      }
+
+      function emitVisibility() {
+        emit("markerVisibility", {
+          anyVisible: planesInfos.some((i) => i.visible),
+        });
       }
 
       // Fetch subtitle database
       fetch("https://cdn.jsdelivr.net/gh/Fanter2033/ar_mic@main/public/media/subtitles/subtitles_db.json")
         .then((response) => {
           if (!response.ok) {
-            throw new Error(
-              "Failed to load subtitles: " + response.statusText,
-            );
+            throw new Error("Failed to load subtitles: " + response.statusText);
           }
           return response.json();
         })
         .then((data) => {
           subtitlesDatabase = data;
+          updateSubtitle();
         })
         .catch((err) => {
           console.error("Errore caricamento sottotitoli:", err);
@@ -66,185 +155,111 @@
 
       // Mute button listener
       window.addEventListener("muteBtnPressed", (e) => {
-        const enabled = e.detail && e.detail.isAudioEnabled;
+        audioEnabled = !!(e.detail && e.detail.isAudioEnabled);
         allContentVideos.forEach((v) => {
-          v.muted = !enabled;
+          v.muted = !audioEnabled;
           v.volume = 1.0;
         });
+        // This runs inside the user's tap, so it is the moment browsers allow
+        // sound: retry the visible video in case it had been blocked.
+        if (activeInfo && activeInfo.visible) {
+          const v = videoFor(activeInfo);
+          if (v && v.paused) play(v);
+        }
       });
 
       // Subtitle event listener
       window.addEventListener("subtitleToggle", (e) => {
-        areSubtitlesEnabled = e.detail;
-        if (!areSubtitlesEnabled && overlay) {
-          overlay.innerText = "";
-          overlay.style.display = "none";
-        }
+        areSubtitlesEnabled = !!e.detail;
+        updateSubtitle();
       });
 
-      // Audio change event listener
+      // Language change event listener
       window.addEventListener("languageChanged", (e) => {
-        const newLang =
-          e && e.detail && e.detail.language ? e.detail.language : null;
+        const newLang = e && e.detail && e.detail.language;
         if (!newLang) return;
+        const previous = activeInfo && videoFor(activeInfo);
         currentLanguage = newLang;
 
-        planesInfos.forEach((info) => {
-          const { plane, videoITA, videoENG } = info;
-          const currentlyPlaying =
-            videoITA && !videoITA.paused
-              ? videoITA
-              : videoENG && !videoENG.paused
-                ? videoENG
-                : null;
-          if (!currentlyPlaying) return; // nothing to swap
-
-          const newActive = currentLanguage === "ITA" ? videoITA : videoENG;
-          if (!newActive) return;
-
-          pauseAllVideos();
-
-          // Sync timestamp
-          try {
-            newActive.currentTime = Math.min(
-              newActive.duration || Infinity,
-              currentlyPlaying.currentTime,
-            );
-          } catch (err) {
-            console.warn("Could not sync video time:", err);
-          }
-
-          // Update plane source
-          plane.setAttribute("src", "#" + newActive.id);
-
-          // Play new video
-          const playPromise = newActive.play();
-          if (playPromise && typeof playPromise.then === "function") {
-            playPromise.catch((err) => {
-              console.warn("Video play failed:", err);
-              if (isIOS && err.name === "NotAllowedError") {
-                const unmuteBtn = document.getElementById("unmute-btn");
-                if (unmuteBtn) unmuteBtn.style.display = "block";
-              }
-            });
-          }
-        });
+        if (activeInfo && activeInfo.visible && previous) {
+          show(activeInfo, previous);
+        } else if (activeInfo) {
+          // Not on screen: just point the plane at the new language
+          const v = videoFor(activeInfo);
+          if (v) setPlaneSrc(activeInfo, v);
+        }
+        updateSubtitle();
       });
 
       // MARKER DETECTION CYCLE
       planesInfos.forEach((info) => {
-        const { marker, plane, videoITA, videoENG } = info;
-
-        marker.addEventListener("markerFound", () => {
-          console.log(`Marker found: ${info.base}`);
-
-          pauseAllVideos();
-
-          const activeVideo = currentLanguage === "ITA" ? videoITA : videoENG;
-          const other = activeVideo === videoITA ? videoENG : videoITA;
-
-          // Sync time from other language if it was playing
-          const source = other && !other.paused ? other : null;
-          if (source && activeVideo) {
-            try {
-              activeVideo.currentTime = source.currentTime;
-            } catch (err) {
-              console.warn("Could not sync video time:", err);
-            }
+        info.marker.addEventListener("markerFound", () => {
+          if (info.lostTimer) {
+            // Came back within the grace period: keep playing seamlessly
+            clearTimeout(info.lostTimer);
+            info.lostTimer = null;
           }
-
-          if (activeVideo) {
-            plane.setAttribute("src", "#" + activeVideo.id);
-
-            // Ensure video is loaded before playing
-            if (activeVideo.readyState < 2) {
-              activeVideo.load();
-            }
-
-            if (activeVideo.paused) {
-              const playPromise = activeVideo.play();
-              if (playPromise && typeof playPromise.then === "function") {
-                playPromise.catch((err) => {
-                  console.warn("Video play failed:", err);
-                  if (isIOS && err.name === "NotAllowedError") {
-                    const unmuteBtn = document.getElementById("unmute-btn");
-                    if (unmuteBtn) unmuteBtn.style.display = "block";
-                  }
-                });
-              }
-            }
-          }
+          info.visible = true;
+          emitVisibility();
+          if (activeInfo !== info || videoFor(info).paused) show(info);
         });
 
-        marker.addEventListener("markerLost", () => {
-          console.log(`Marker lost: ${info.base}`);
-          if (videoITA && !videoITA.paused) videoITA.pause();
-          if (videoENG && !videoENG.paused) videoENG.pause();
+        info.marker.addEventListener("markerLost", () => {
+          if (info.lostTimer) clearTimeout(info.lostTimer);
+          info.lostTimer = setTimeout(() => {
+            info.lostTimer = null;
+            info.visible = false;
+            emitVisibility();
+            if (info.videoITA) info.videoITA.pause();
+            if (info.videoENG) info.videoENG.pause();
+
+            // If another marker is still in view, resume it
+            if (activeInfo === info) {
+              const other = planesInfos.find((i) => i.visible);
+              if (other) show(other);
+              else updateBuffering();
+            }
+          }, MARKER_LOST_GRACE_MS);
         });
       });
 
-      // SUBTITLE SYNCHRONIZATION ENGINE
+      // Pause when the tab/app goes to background, resume when back
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          pauseAllVideos();
+        } else if (activeInfo && activeInfo.visible) {
+          show(activeInfo);
+        }
+      });
+
+      // ── SUBTITLE SYNCHRONIZATION ENGINE ──
+      // Driven by the video's own timeupdate events instead of a permanent
+      // 200 ms timer, so nothing runs while subtitles are off or no video plays.
       let lastSubtitleText = "";
-      setInterval(() => {
-        if (!areSubtitlesEnabled || !overlay) {
-          if (overlay && lastSubtitleText !== "") {
-            overlay.textContent = "";
-            overlay.style.display = "none";
-            lastSubtitleText = "";
-          }
-          return;
-        }
 
-        // Find which video is playing
-        let activeVideo = null;
-        for (let i = 0; i < allContentVideos.length; i++) {
-          const v = allContentVideos[i];
-          if (!v.paused && !v.ended && v.currentTime > 0) {
-            activeVideo = v;
-            break;
-          }
-        }
+      function setSubtitle(text) {
+        if (!overlay || text === lastSubtitleText) return;
+        lastSubtitleText = text;
+        overlay.textContent = text;
+        overlay.style.display = text ? "block" : "none";
+      }
 
-        // If no video is playing, hide subtitles
-        if (!activeVideo) {
-          if (lastSubtitleText !== "") {
-            overlay.textContent = "";
-            overlay.style.display = "none";
-            lastSubtitleText = "";
-          }
-          return;
-        }
+      function updateSubtitle() {
+        if (!areSubtitlesEnabled || !overlay) return setSubtitle("");
+        const v = activeInfo && videoFor(activeInfo);
+        if (!v || v.paused || v.ended) return setSubtitle("");
+        const tracks = subtitlesDatabase[v.id];
+        if (!tracks) return setSubtitle("");
+        const t = v.currentTime;
+        const cue = tracks.find((sub) => t >= sub.start && t <= sub.end);
+        setSubtitle(cue ? cue.text : "");
+      }
 
-        // Get subtitles for this video
-        const tracks = subtitlesDatabase[activeVideo.id];
-        if (!tracks) {
-          if (lastSubtitleText !== "") {
-            overlay.textContent = "";
-            overlay.style.display = "none";
-            lastSubtitleText = "";
-          }
-          return;
-        }
-
-        // Find the right subtitle for current time
-        const currentTime = activeVideo.currentTime;
-        const currentSubtitle = tracks.find(
-          (sub) => currentTime >= sub.start && currentTime <= sub.end,
+      allContentVideos.forEach((v) => {
+        ["timeupdate", "pause", "playing", "seeked", "ended"].forEach((ev) =>
+          v.addEventListener(ev, updateSubtitle),
         );
-
-        // Only update DOM if text actually changed
-        if (currentSubtitle) {
-          if (lastSubtitleText !== currentSubtitle.text) {
-            overlay.textContent = currentSubtitle.text;
-            overlay.style.display = "block";
-            lastSubtitleText = currentSubtitle.text;
-          }
-        } else if (lastSubtitleText !== "") {
-          overlay.textContent = "";
-          overlay.style.display = "none";
-          lastSubtitleText = "";
-        }
-      }, 200); 
+      });
     },
   };
 })(window);
